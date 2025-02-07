@@ -1,16 +1,27 @@
 # System Python
 PYTHON := python3
 BIN := ./venv/bin
-VERSION := $(shell git describe --tags)
-CONTAINER_RUNTIME:=docker
+VERSION := $(shell git describe --tags --always)
+ifeq ($(shell command -v podman),)
+    CONTAINER_RUNTIME := docker
+else
+    CONTAINER_RUNTIME := podman
+endif
 IMAGE_NAME:=apimon
+include .env
 
 .PHONY: all
 all: image
 
 .PHONY: start
 start: image stop
-	$(CONTAINER_RUNTIME) run -d --restart=always --name $(IMAGE_NAME) -p 8088:5000 -e MC_SERVER_LIST=$(MC_SERVER_LIST) $(IMAGE_NAME):$(VERSION)
+	@echo Starting Docker Image \"$(IMAGE_NAME):$(VERSION)\"
+	@$(CONTAINER_RUNTIME) run -d --restart=always --name $(IMAGE_NAME) -p 8088:5000 \
+	-e ACCESS_TOKEN_URL=$(ACCESS_TOKEN_URL) \
+	-e CLIENT_ID=$(CLIENT_ID) \
+	-e CLIENT_SECRET=$(CLIENT_SECRET) \
+	-e SCOPE=$(SCOPE) \
+	$(IMAGE_NAME):$(VERSION)
 
 .PHONY: stop
 stop:

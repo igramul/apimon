@@ -1,0 +1,21 @@
+[Unit]
+Description=APIM Betriebs Board Monitor
+After=network.target
+
+[Service]
+WorkingDirectory=/<replace-with-path-to>/apimon
+
+User=root
+Group=root
+
+Restart=always
+
+ExecStart=/<replace-with-path-to>apimon/venv/bin/gunicorn -b :80 flaskapp:app
+
+ExecStop=/bin/kill -SIGINT $MAINPID
+
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+

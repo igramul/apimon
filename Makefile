@@ -16,7 +16,7 @@ all: image
 .PHONY: start
 start: image stop
 	@echo Starting Docker Image \"$(IMAGE_NAME):$(VERSION)\"
-	@$(CONTAINER_RUNTIME) run -d --restart=always --name $(IMAGE_NAME) -p 8088:5000 \
+	@$(CONTAINER_RUNTIME) run -d --privileged --restart=always --name $(IMAGE_NAME) -p 8088:5000 \
 	-e ACCESS_TOKEN_URL=$(ACCESS_TOKEN_URL) \
 	-e CLIENT_ID=$(CLIENT_ID) \
 	-e CLIENT_SECRET=$(CLIENT_SECRET) \

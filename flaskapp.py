@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import atexit
 
 from flask import Flask, jsonify
 from flask_apscheduler import APScheduler
@@ -19,6 +20,13 @@ load_dotenv()
 
 pixels = neopixel.NeoPixel(board.D18, 30)
 
+color_weiss = (255,255,255)
+color_black = (0,0,0)
+color_red = (255,0,0)
+color_green = (0,255,0)
+color_blue = (0,0,255)
+color_magenta = (255,0,255)
+
 tickets = {}
 
 # set configuration values
@@ -29,11 +37,20 @@ logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 app.config.from_object(Config())
 
+def cleanup():
+    print("Das Programm apimon wird beendet. Alle LEDs werde gelöscht.")
+    pixels.fill(color_black)
+    pixels.show()
+
+atexit.register(cleanup)
+
+
 # initialize scheduler
 scheduler = APScheduler()
 scheduler.init_app(app)
 scheduler.start()
 
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 @app.route('/')
 def get_root():
@@ -82,14 +99,7 @@ def _update_tickets():
         tickets[status] = response_json.get('total')
 
 
-color_weiss = (255,255,255)
-color_black = (0,0,0)
-color_red = (255,0,0)
-color_green = (0,255,0)
-color_blue = (0,0,255)
-color_magenta = (255,0,255)
-
-pixel_array = [color_black]
+pixel_array = [color_black, 10]
 def _update_pixels():
     index = 0
     if pixel_array[0] == color_weiss:
@@ -97,9 +107,18 @@ def _update_pixels():
     else:
          pixel_array[0] = color_weiss
     pixels[index] = pixel_array[0]
+
+    pixel_array[1] = pixel_array[1] + 1
+    if pixel_array[1] < 10:
+        pixels.show()
+        return
+    pixel_array[1] = 0
+
     index =+ 1
     for status in reversed(status_list):
-        count = tickets[status]
+        count = tickets.get(status)
+        if not count:
+            continue
         if status == 'Checking':
             color = color_green
         if status == 'Deferred':

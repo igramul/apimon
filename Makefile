@@ -2,48 +2,29 @@
 PYTHON := python3
 BIN := ./venv/bin
 VERSION := $(shell git describe --tags --always)
-ifeq ($(shell command -v podman),)
-    CONTAINER_RUNTIME := docker
-else
-    CONTAINER_RUNTIME := podman
-endif
-IMAGE_NAME:=apimon
-include .env
 
 .PHONY: all
-all: image
+all: start
 
 .PHONY: start
-start: image stop
-	@echo Starting Docker Image \"$(IMAGE_NAME):$(VERSION)\"
-	@$(CONTAINER_RUNTIME) run -d --privileged --restart=always --name $(IMAGE_NAME) -p 8088:5000 \
-	-e ACCESS_TOKEN_URL=$(ACCESS_TOKEN_URL) \
-	-e CLIENT_ID=$(CLIENT_ID) \
-	-e CLIENT_SECRET=$(CLIENT_SECRET) \
-	-e SCOPE=$(SCOPE) \
-	$(IMAGE_NAME):$(VERSION)
+start: version.py
+	$(BIN)/gunicorn -b :5001 --access-logfile - --error-logfile - flaskapp:app
 
-.PHONY: stop
-stop:
-	$(CONTAINER_RUNTIME) stop $(IMAGE_NAME) || true &&  $(CONTAINER_RUNTIME) rm $(IMAGE_NAME) || true
-
-.PHONY: image
-image: venv version.py
-	$(CONTAINER_RUNTIME) build . -t $(IMAGE_NAME):$(VERSION)
-
-.PHONY: version.py
-version.py:
+version.py: .git
 	echo version = \"$(VERSION)\" > $@
 	echo commit = \"`git rev-parse HEAD`\" >> $@
 	echo commit_short = \"`git rev-parse --short HEAD`\" >> $@
 
 venv:
 	$(PYTHON) -m venv venv
-	$(BIN)/pip install -r requirements.txt
 
 .PHONY: venv-upgrade
 venv-upgrade: venv
 	$(BIN)/pip install --upgrade pip setuptools
+
+.Phony: install
+install: venv venv-upgrade
+	$(BIN)/pip install -r requirements.txt
 
 .PHONY:
 clean:

@@ -13,9 +13,11 @@ number of open tickets on a neopixel led stripe.
 
 ## Setup automatic start
 
-    sudo cp apim.service /etc/systemd/system/
+    sudo cp apimon.service /etc/systemd/system/
 
     sudo systemctl daemon-reload
-    sudo systemctl enable apimon.service
-    sudo systemctl start apimon.service
-    sudo systemctl status apimon.service
+    sudo systemctl enable apimon
+    sudo systemctl start apimon
+    sudo systemctl status apimon
+
+LRead the logs: `journalctl -u apimon`

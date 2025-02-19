@@ -1,0 +1,22 @@
+[Unit]
+Description=APIM Betriebs Board Monitor
+After=network.target
+
+[Service]
+WorkingDirectory=/home/lukas/Work/apimon
+
+User=root
+Group=root
+
+Restart=always
+
+ExecStart=/home/lukas/Work/apimon/venv/bin/gunicorn -b :80 flaskapp:app
+
+ExecStop=/bin/kill -SIGINT $MAINPID
+
+# Optional: Setze den Typ, um sicherzustellen, dass systemd weiss, wie es den Dienst behandelt
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+

@@ -13,19 +13,13 @@ from requests_oauthlib import OAuth2Session
 import board
 import neopixel
 
+import colors
 import version
 
 # Load environment variables from .env file
 load_dotenv()
 
 pixels = neopixel.NeoPixel(board.D18, 30)
-
-color_weiss = (255,255,255)
-color_black = (0,0,0)
-color_red = (255,0,0)
-color_green = (0,255,0)
-color_blue = (0,0,255)
-color_magenta = (255,0,255)
 
 tickets = {}
 
@@ -38,9 +32,8 @@ app = Flask(__name__)
 app.config.from_object(Config())
 
 def cleanup():
-    print("Das Programm apimon wird beendet. Alle LEDs werde gelöscht.")
-    pixels.fill(color_black)
-    pixels.show()
+    print('Das Programm apimon wird beendet. Alle LEDs werde gelöscht.')
+    del pixels
 
 atexit.register(cleanup)
 
@@ -99,13 +92,20 @@ def _update_tickets():
         tickets[status] = response_json.get('total')
 
 
-pixel_array = [color_black, 10]
+status_color_map = {
+    'Checking': colors.green,
+    'Deferred': colors.blue,
+    'In Progress': colors.magenta,
+    'Open': colors.red
+}
+
+pixel_array = [colors.black, 10]
 def _update_pixels():
     index = 0
-    if pixel_array[0] == color_weiss:
-        pixel_array[0] = color_black
+    if pixel_array[0] == colors.weiss:
+        pixel_array[0] = colors.black
     else:
-         pixel_array[0] = color_weiss
+         pixel_array[0] = colors.weiss
     pixels[index] = pixel_array[0]
 
     pixel_array[1] = pixel_array[1] + 1
@@ -119,19 +119,12 @@ def _update_pixels():
         count = tickets.get(status)
         if not count:
             continue
-        if status == 'Checking':
-            color = color_green
-        if status == 'Deferred':
-            color = color_blue
-        if status == 'In Progress':
-            color = color_magenta
-        if status == 'Open':
-            color = color_red
+        color = status_color_map.get(status)
         for i in range(count):
             pixels[index+i] = color
         index += count
         for i in range(index, pixels.n):
-            pixels[i] = color_black
+            pixels[i] = colors.black
     pixels.show()
 
 
@@ -143,7 +136,6 @@ def job_update_tickets():
 @scheduler.task('interval', id='do_job_update_pixels', seconds=1)
 def job_update_pixels():
    _update_pixels() 
-
 
 
 _update_tickets()

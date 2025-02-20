@@ -11,7 +11,7 @@ from neo_pixel_controller import NeoPixelController
 
 import version
 
-LED_COUNT = 10
+LED_COUNT = 40
 
 # Load environment variables from .env file
 load_dotenv()

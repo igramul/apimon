@@ -1,41 +1,24 @@
+import math
+
 import board
 import neopixel
+
 import colors
 
 class NeoPixelController:
-    def __init__(self):
-        self.pixels = neopixel.NeoPixel(board.D18, 40)
-        self.pixel_array = [colors.black, 10]
-        self.status_color_map = {
-            'Checking': colors.green,
-            'Deferred': colors.blue,
-            'In Progress': colors.magenta,
-            'Open': colors.red
-        }
+    def __init__(self, led_count: int):
 
-    def update_pixels(self, tickets, status_list):
-        index = 0
-        if self.pixel_array[0] == colors.weiss:
-            self.pixel_array[0] = colors.black
-        else:
-            self.pixel_array[0] = colors.weiss
-        self.pixels[index] = self.pixel_array[0]
+        self.pixels = neopixel.NeoPixel(board.D18, led_count)
+        self.pixels_array = [None] * led_count
+        self.update_pixels([colors.black] * led_count)
 
-        self.pixel_array[1] = self.pixel_array[1] + 1
-        if self.pixel_array[1] < 10:
-            self.pixels.show()
-            return
-        self.pixel_array[1] = 0
+    def update_pixels(self, leds: list ):
 
-        index += 1
-        for status in reversed(status_list):
-            count = tickets.get(status)
-            if not count:
-                continue
-            color = self.status_color_map.get(status)
-            for i in range(count):
-                self.pixels[index + i] = color
-            index += count
-        for i in range(index, self.pixels.n):
-            self.pixels[i] = colors.black
+        for index, color in enumerate(leds):
+            if self.pixels_array[index] != color:
+                self.pixels_array[index] = color
+                self.pixels[index] = color
+
         self.pixels.show()
+
+

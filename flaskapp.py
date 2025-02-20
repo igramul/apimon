@@ -5,19 +5,20 @@ from flask import Flask, jsonify
 from flask_apscheduler import APScheduler
 from dotenv import load_dotenv
 
+from jira_ticket_fetcher import JiraTicketFetcher
+from ticket_led_mapper import TicketLedMapper
+from neo_pixel_controller import NeoPixelController
+
 import version
 
-from jira_ticket_fetcher import JiraTicketFetcher  # Import the JiraTicketFetcher class
-from neo_pixel_controller import NeoPixelController  # Import the NeoPixelController class
+LED_COUNT = 10
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize JiraTicketFetcher
 ticket_fetcher = JiraTicketFetcher()
-
-# Initialize NeoPixelController
-neo_pixel_controller = NeoPixelController()
+ticket_led_mapper = TicketLedMapper(LED_COUNT)
+neo_pixel_controller = NeoPixelController(LED_COUNT)
 
 # set configuration values
 class Config:
@@ -26,11 +27,6 @@ class Config:
 logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 app.config.from_object(Config())
-
-def cleanup():
-    del neo_pixel_controller
-
-atexit.register(cleanup)
 
 # initialize scheduler
 scheduler = APScheduler()
@@ -51,11 +47,17 @@ def get_root():
 def job_update_tickets():
     ticket_fetcher.update_tickets()
 
-@scheduler.task('interval', id='do_job_update_pixels', seconds=1)
+@scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():
-    neo_pixel_controller.update_pixels(ticket_fetcher.get_tickets(), ticket_fetcher.status_list)
+    tickets = ticket_fetcher.get_tickets()
+    ticket_led_mapper.set_ticket(tickets)
+    leds = ticket_led_mapper.leds
+    neo_pixel_controller.update_pixels(leds)
 
-ticket_fetcher.update_tickets()
+def cleanup():
+    del neo_pixel_controller
+
+atexit.register(cleanup)
 
 if __name__ == '__main__':
     app.run()

@@ -7,7 +7,11 @@ from dotenv import load_dotenv
 
 from jira_ticket_fetcher import JiraTicketFetcher
 from ticket_led_mapper import TicketLedMapper
-from neo_pixel_controller import NeoPixelController
+
+try:
+    from neopixel_controller import NeoPixelController
+except NotImplementedError:
+    from nopixel_controller import NoPixelController as NeoPixelController
 
 import version
 
@@ -18,7 +22,7 @@ load_dotenv()
 
 ticket_fetcher = JiraTicketFetcher()
 ticket_led_mapper = TicketLedMapper(LED_COUNT)
-neo_pixel_controller = NeoPixelController(LED_COUNT)
+neopixel_controller = NeoPixelController(LED_COUNT)
 
 # set configuration values
 class Config:
@@ -40,7 +44,8 @@ def get_root():
     return jsonify({
         'name': 'apimon',
         'version': version.version,
-        'tickets': ticket_fetcher.get_tickets()  # Use the new class to get tickets
+        'tickets': ticket_fetcher.tickets,
+        'pixels': neopixel_controller.pixels,
     })
 
 @scheduler.task('cron', id='do_job_update_tickets', minute='*/5')
@@ -49,13 +54,13 @@ def job_update_tickets():
 
 @scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():
-    tickets = ticket_fetcher.get_tickets()
-    ticket_led_mapper.set_ticket(tickets)
+    colors = ticket_fetcher.colors
+    ticket_led_mapper.set_ticket(colors)
     leds = ticket_led_mapper.leds
-    neo_pixel_controller.update_pixels(leds)
+    neopixel_controller.update_pixels(leds)
 
 def cleanup():
-    del neo_pixel_controller
+    del neopixel_controller
 
 atexit.register(cleanup)
 

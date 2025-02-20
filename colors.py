@@ -1,9 +1,11 @@
-weiss = (255,255,255)
-black = (0,0,0)
-red = (255,0,0)
-green = (0,255,0)
-blue = (0,0,255)
-magenta = (255,0,255)
+weiss = 0xFFFFFF
+black = 0x000000
+red = 0xFF0000
+green = 0x00FF00
+blue = 0x0000FF
+magenta = 0xFF00FF
+yellow = 0x00FFFF
+cyan = 0xFFFF00
 
 def add(color1, color2):
     r = min(color1[0] + color2[0], 255)

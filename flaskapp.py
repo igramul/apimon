@@ -26,7 +26,7 @@ neopixel_controller = NeoPixelController(LED_COUNT)
 
 # set configuration values
 class Config:
-    SCHEDULER_API_ENABLED = True
+    SCHEDULER_API_ENABLED = False
 
 logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
@@ -45,24 +45,27 @@ def get_root():
         'name': 'apimon',
         'version': version.version,
         'tickets': ticket_fetcher.tickets,
-        'pixels': neopixel_controller.pixels,
+        'leds': neopixel_controller.leds,
     })
 
-@scheduler.task('cron', id='do_job_update_tickets', minute='*/5')
+@scheduler.task('cron', id='do_job_update_tickets', minute='*/1')
 def job_update_tickets():
     ticket_fetcher.update_tickets()
-
-@scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
-def job_update_pixels():
     colors = ticket_fetcher.colors
     ticket_led_mapper.set_ticket(colors)
     leds = ticket_led_mapper.leds
-    neopixel_controller.update_pixels(leds)
+    neopixel_controller.set_leds(leds)
+
+@scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
+def job_update_pixels():
+    neopixel_controller.update()
 
 def cleanup():
     del neopixel_controller
 
 atexit.register(cleanup)
+
+job_update_tickets()
 
 if __name__ == '__main__':
     app.run()

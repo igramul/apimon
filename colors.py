@@ -1,4 +1,4 @@
-weiss = 0xFFFFFF
+white = 0xFFFFFF
 black = 0x000000
 red = 0xFF0000
 green = 0x00FF00

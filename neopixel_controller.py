@@ -39,6 +39,15 @@ class NeoPixelController(NoPixelController):
 
     def _init(self):
         with self._lock:
+            for i in range(self._pixels.n):
+                self._led_array[i] = colors.get_random_color()
+            self._update()
+            time.sleep(0.2)
+            for i in range(self._pixels.n):
+                self._led_array[i] = colors.get_random_color()
+            self._update()
+            time.sleep(0.2)
+
             for i in range(self._pixels.n - 1):
                 self._led_array = [colors.black] * self._pixels.n
                 self._led_array[i] = colors.white
@@ -51,6 +60,7 @@ class NeoPixelController(NoPixelController):
                 time.sleep(0.5 / self._pixels.n)
             self._led_array = [colors.black] * self._pixels.n
             self._update()
+        self._status = STATUS.WORKING
 
     def set_leds(self, leds: list):
         with self._lock:
@@ -75,6 +85,6 @@ class NeoPixelController(NoPixelController):
                 color = colors.white
             else:
                 color = colors.black
-            self._pixels[0] = color.add(color, self._pixel_array[0])
+            self._pixels[0] = colors.add(color, self._pixel_array[0])
 
         self._pixels.show()

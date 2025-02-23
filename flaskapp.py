@@ -3,10 +3,12 @@ import atexit
 
 from flask import Flask, jsonify
 from flask_apscheduler import APScheduler
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from dotenv import load_dotenv
 
 from jira_ticket_fetcher import JiraTicketFetcher
 from ticket_led_mapper import TicketLedMapper
+from exceptions import ConnectionException
 
 try:
     from neopixel_controller import NeoPixelController
@@ -34,6 +36,17 @@ app.config.from_object(Config())
 
 # initialize scheduler
 scheduler = APScheduler()
+
+
+def scheduler_listener(event):
+    if event.exception:
+        logging.error(f"Scheduler task {event.job_id} failed: {event.exception}")
+        neopixel_controller.set_error(True)
+    else:
+        neopixel_controller.set_error(False)
+
+
+scheduler.add_listener(scheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
 scheduler.init_app(app)
 scheduler.start()
 
@@ -46,11 +59,19 @@ def get_root():
         'version': version.version,
         'tickets': ticket_fetcher.tickets,
         'leds': [color.tuple_str for color in neopixel_controller.leds],
+        'status': neopixel_controller.status.name
     })
 
 @scheduler.task('cron', id='do_job_update_tickets', minute='*/1')
 def job_update_tickets():
-    ticket_fetcher.update_tickets()
+    try:
+        ticket_fetcher.update_tickets()
+    except Exception as e:
+        logging.error(f'*** {e} ***')
+        neopixel_controller.set_connection_error(True)
+        return
+    else:
+        neopixel_controller.set_connection_error(False)
     colors = ticket_fetcher.colors
     ticket_led_mapper.set_ticket(colors)
     leds = ticket_led_mapper.leds

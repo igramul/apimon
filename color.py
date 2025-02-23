@@ -58,8 +58,12 @@ class Color(object):
         return cls.from_rgb(0, 255, 255)
 
     @classproperty
-    def grey50(cls) -> 'Color':
-        return cls.from_rgb(128, 128, 128)
+    def orange(cls) -> 'Color':
+        return cls.from_rgb(255, 128, 0)
+
+    @classmethod
+    def grey(cls, percent) -> 'Color':
+        return cls.from_rgb(int(percent * 255 / 100), int(percent * 255 / 100), int(percent * 255 / 100))
 
     def __add__(self, other: 'Color') -> 'Color':
         return Color(

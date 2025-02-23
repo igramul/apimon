@@ -2,6 +2,8 @@ import os
 import json
 from collections import OrderedDict
 
+import requests
+from requests.exceptions import ConnectionError
 from requests.auth import HTTPBasicAuth
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
@@ -31,11 +33,14 @@ class JiraTicketFetcher:
 
         client = BackendApplicationClient(client_id=self._client_id)
         oauth = OAuth2Session(client=client)
-        oauth.fetch_token(
-            token_url=self._token_url,
-            auth=HTTPBasicAuth(self._client_id, self._client_secret),
-            scope=self.scope
-        )
+        try:
+            oauth.fetch_token(
+                token_url=self._token_url,
+                auth=HTTPBasicAuth(self._client_id, self._client_secret),
+                scope=self.scope
+            )
+        except requests.exceptions.ConnectionError:
+            raise ConnectionError('Could not get OAuth token.')
         return oauth
 
     def update_tickets(self):
@@ -50,7 +55,10 @@ class JiraTicketFetcher:
                 'maxResults': 0,
                 'fields': ['key']
             }
-            response = oauth.post(url=url, json=data)
+            try:
+                response = oauth.post(url=url, json=data)
+            except requests.exceptions.ConnectionError:
+                raise ConnectionError('Could not get Jira tickets.')
             response_json = json.JSONDecoder().decode(response.text)
             color = self._status_color_map.get(status)
             self._tickets[status] = self._colors[color] = response_json.get('total')

@@ -20,5 +20,8 @@ number of open tickets on a neopixel led stripe.
     sudo systemctl start apimon
     sudo systemctl status apimon
 
-Read the logs: `journalctl -u apimon`
+Read the logs: `journalctl -fu apimon`
 
+## Configure Unattended Upgrades
+
+See this link: https://wiki.debian.org/UnattendedUpgrades

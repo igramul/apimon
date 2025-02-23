@@ -1,3 +1,4 @@
+import logging
 from enum import Enum, auto
 from threading import Lock
 import time
@@ -69,6 +70,7 @@ class NeoPixelController(NoPixelController):
         # pulsing status LED (index 0)
         if self._status == STATUS.WORKING:
             cycle_time = time.time() % (2 * self.PULSING_PERIOD)
+            logging.debug(f"cycle_time: {cycle_time}")
             if cycle_time < self.PULSING_PERIOD:
                 color = colors.white
             else:

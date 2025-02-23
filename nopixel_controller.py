@@ -1,19 +1,17 @@
 import colors
 
 
-class NoPixelController:
+class NoPixelController(object):
 
     def __init__(self, led_count: int):
+        self._led_array = [colors.black] * led_count
 
-        self._pixels_array = [None] * led_count
-        self.update_pixels([colors.black] * led_count)
+    def set_leds(self, leds: list):
+        self._led_array = leds
 
-    def update_pixels(self, leds: list ):
-
-        for index, color in enumerate(leds):
-            if self._pixels_array[index] != color:
-                self._pixels_array[index] = color
+    def update(self):
+        pass
 
     @property
-    def pixels(self):
-        return self._pixels_array
+    def leds(self):
+        return self._led_array

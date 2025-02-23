@@ -6,6 +6,7 @@ import time
 import board
 import neopixel
 
+from nopixel_controller import NoPixelController
 import colors
 
 
@@ -16,11 +17,12 @@ class STATUS(Enum):
     ERROR = auto()
 
 
-class NeoPixelController:
+class NeoPixelController(NoPixelController):
 
     PULSING_PERIOD = 2
 
     def __init__(self, led_count: int):
+        super().__init__(led_count)
         self._lock = Lock()
         self._pixels = neopixel.NeoPixel(board.D18, led_count)
         self._pixels.fill(colors.black)
@@ -65,7 +67,3 @@ class NeoPixelController:
                 self._pixels[index] = color
 
         self._pixels.show()
-
-    @property
-    def leds(self):
-        return self._led_array

@@ -1,22 +1,18 @@
+from typing import List
 import math
 from collections import OrderedDict
 
-import colors
+from color import Color
 
 
 class TicketLedMapper(object):
 
     def __init__(self, led_count: int) -> None:
+        self._led_count: int = led_count
+        self._leds: List[Color] = [Color.black] * self._led_count
+        self._overflow: bool = False
 
-        self._led_count = led_count
-        self._leds = None
-        self._overflow = False
-        self._init_leds()
-
-    def _init_leds(self):
-        self._leds = [colors.black] * self._led_count
-
-    def set_ticket(self, tickets: OrderedDict[str, int]) -> None:
+    def set_ticket(self, tickets: OrderedDict[Color, int]) -> None:
 
         tickets_count = sum(tickets.values())
         if tickets_count > self._led_count:
@@ -37,12 +33,12 @@ class TicketLedMapper(object):
             leds += [color] * count
 
         if not self._overflow:
-            leds += [colors.black] * (self._led_count - tickets_count)
+            leds += [Color.black] * (self._led_count - tickets_count)
 
         self._leds = leds
 
     @property
-    def leds(self) -> list:
+    def leds(self) -> List[Color]:
         return self._leds
 
     @property

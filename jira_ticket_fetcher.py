@@ -6,7 +6,8 @@ from requests.auth import HTTPBasicAuth
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
-import colors
+from color import Color
+
 
 class JiraTicketFetcher:
     def __init__(self) -> None:
@@ -17,10 +18,10 @@ class JiraTicketFetcher:
         self._base_url = 'https://flow.api.sbb.ch:443/rest/api/2'
         self._status_list = ['Open', 'In Progress', 'Deferred', 'Checking']
         self._status_color_map = {
-            'Checking': colors.green,
-            'Deferred': colors.blue,
-            'In Progress': colors.magenta,
-            'Open': colors.red
+            'Checking': Color.green,
+            'Deferred': Color.blue,
+            'In Progress': Color.magenta,
+            'Open': Color.red
         }
         self._tickets = OrderedDict()
         self._colors = OrderedDict()

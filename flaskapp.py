@@ -45,7 +45,7 @@ def get_root():
         'name': 'apimon',
         'version': version.version,
         'tickets': ticket_fetcher.tickets,
-        'leds': neopixel_controller.leds,
+        'leds': [color.tuple_str for color in neopixel_controller.leds],
     })
 
 @scheduler.task('cron', id='do_job_update_tickets', minute='*/1')
@@ -61,7 +61,7 @@ def job_update_pixels():
     neopixel_controller.update()
 
 def cleanup():
-    del neopixel_controller
+    scheduler.shutdown()
 
 atexit.register(cleanup)
 

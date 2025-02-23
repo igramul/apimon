@@ -1,4 +1,3 @@
-import logging
 from enum import Enum, auto
 from threading import Lock
 import time
@@ -61,9 +60,19 @@ class NeoPixelController(NoPixelController):
             self._update()
 
     def _update(self):
+        # update LED array to pixel array
         for index, color in enumerate(self._led_array):
             if self._pixel_array[index] != color:
                 self._pixel_array[index] = color
                 self._pixels[index] = color
+
+        # pulsing status LED (index 0)
+        if self._status == STATUS.WORKING:
+            cycle_time = time.time() % (2 * self.PULSING_PERIOD)
+            if cycle_time < self.PULSING_PERIOD:
+                color = colors.white
+            else:
+                color = colors.black
+            self._pixels[0] = color.add(color, self._pixel_array[0])
 
         self._pixels.show()

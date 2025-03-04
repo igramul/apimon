@@ -16,7 +16,7 @@ from .status import STATUS
 
 class NeoPixelController(object):
 
-    PULSING_PERIOD = 1
+    PULSING_PERIOD = 2
 
     def __init__(self, led_count: int) -> None:
         self._lock: Lock = Lock()
@@ -101,7 +101,7 @@ class NeoPixelController(object):
         else:
             status_color = Color.black
 
-        cycle_time = time.time() % (2 * self.PULSING_PERIOD)
+        cycle_time = time.time() % self.PULSING_PERIOD
         pulsing_brightness = int(math.sin(cycle_time * self.PULSING_PERIOD * math.pi / 2) * 255)
         color = status_color.adjust_brightness(max(pulsing_brightness, 0))
         self._pixels[0] = (color + self._led_array[0]).tuple

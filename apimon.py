@@ -5,15 +5,13 @@ from flask import Flask, jsonify
 from flask_apscheduler import APScheduler
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from dotenv import load_dotenv
+from requests.exceptions import ConnectionError
 
 from app.jira_ticket_fetcher import JiraTicketFetcher
 from app.ticket_led_mapper import TicketLedMapper
 from app.gitinfo import GitInfo
 
-#try:
 from app.neopixel_controller import NeoPixelController
-#except NotImplementedError:
-#    from app.nopixel_controller import NoPixelController as NeoPixelController
 
 LED_COUNT = 40
 
@@ -74,10 +72,9 @@ def get_api_info():
 def job_update_tickets():
     try:
         ticket_fetcher.update_tickets()
-    except Exception as e:
-        logging.error(f'*** {e} ***')
+    except ConnectionError as e:
+        logging.error(e)
         neopixel_controller.set_connection_error(True)
-        return
     else:
         neopixel_controller.set_connection_error(False)
     colors = ticket_fetcher.colors

@@ -1,8 +1,10 @@
+import time
+from typing import List, Dict
+import logging
 import os
 import json
 from collections import OrderedDict
 
-import requests
 from requests.exceptions import ConnectionError
 from requests.auth import HTTPBasicAuth
 from oauthlib.oauth2 import BackendApplicationClient
@@ -12,22 +14,31 @@ from .models.color import Color
 
 
 class JiraTicketFetcher:
+
+    TIMEOUT: int = 60*60 # 1h
+    STATUS_LIST: List[str] = ['Open', 'In Progress', 'Deferred', 'Checking']
+    STATUS_COLOR_MAP: Dict[str, Color] = {
+        'Checking': Color.green,
+        'Deferred': Color.blue,
+        'In Progress': Color.magenta,
+        'Open': Color.red
+    }
+
     def __init__(self) -> None:
-        self._token_url = os.environ.get('ACCESS_TOKEN_URL')
-        self._client_id = os.environ.get('CLIENT_ID')
-        self._client_secret = os.environ.get('CLIENT_SECRET')
-        self.scope = os.environ.get('SCOPE')
-        self._base_url = os.environ.get('BASE_URL')
-        self._status_list = ['Open', 'In Progress', 'Deferred', 'Checking']
-        self._status_color_map = {
-            'Checking': Color.green,
-            'Deferred': Color.blue,
-            'In Progress': Color.magenta,
-            'Open': Color.red
-        }
-        self._tickets = OrderedDict()
-        self._colors = OrderedDict()
-        self.update_tickets()
+        self._token_url: str = os.environ.get('ACCESS_TOKEN_URL')
+        self._client_id: str = os.environ.get('CLIENT_ID')
+        self._client_secret: str = os.environ.get('CLIENT_SECRET')
+        self.scope: str = os.environ.get('SCOPE')
+        self._base_url: str = os.environ.get('BASE_URL')
+
+        self._tickets: OrderedDict[str, str] = OrderedDict()
+        self._colors: OrderedDict[Color, str]  = OrderedDict()
+        self._last_update: float = time.time()
+
+        try:
+            self.update_tickets()
+        except ConnectionError as e:
+            logging.error(e)
 
     def _get_oauth_token(self) -> OAuth2Session:
 
@@ -39,7 +50,10 @@ class JiraTicketFetcher:
                 auth=HTTPBasicAuth(self._client_id, self._client_secret),
                 scope=self.scope
             )
-        except requests.exceptions.ConnectionError:
+        except ConnectionError:
+            if not self.data_still_valid:
+                self._tickets = OrderedDict()
+                self._colors = OrderedDict()
             raise ConnectionError('Could not get OAuth token.')
         return oauth
 
@@ -48,7 +62,7 @@ class JiraTicketFetcher:
         path: str = 'search'
         url : str = f'{self._base_url}/{path}'
 
-        for status in self._status_list:
+        for status in self.STATUS_LIST:
             jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}"'
             data = {
                 'jql': jql,
@@ -57,11 +71,16 @@ class JiraTicketFetcher:
             }
             try:
                 response = oauth.post(url=url, json=data)
-            except requests.exceptions.ConnectionError:
+            except ConnectionError:
+                if not self.data_still_valid:
+                    self._tickets = OrderedDict()
+                    self._colors = OrderedDict()
                 raise ConnectionError('Could not get Jira tickets.')
             response_json = json.JSONDecoder().decode(response.text)
-            color = self._status_color_map.get(status)
+            color = self.STATUS_COLOR_MAP.get(status)
             self._tickets[status] = self._colors[color] = response_json.get('total')
+
+        self._last_update = time.time()
 
     @property
     def tickets(self) -> OrderedDict:
@@ -70,3 +89,7 @@ class JiraTicketFetcher:
     @property
     def colors(self) -> OrderedDict:
         return self._colors
+
+    @property
+    def data_still_valid(self) -> bool:
+        return self._last_update + self.TIMEOUT > time.time()

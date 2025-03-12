@@ -12,6 +12,14 @@ number of open tickets on a neopixel led stripe.
 3. create the first version tag like `git tag 0.1.0`
 4. start server be invoke `make`
 
+## Install and clone Project from GitHub
+
+    git clone <https-projekt-url>
+
+### Config Git to work work apimon
+
+    sudo git config --global --add safe.directory /<path-to-repo>/apimon
+
 
 ## Setup automatic start
 

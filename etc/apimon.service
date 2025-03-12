@@ -10,7 +10,7 @@ Group=root
 
 Restart=always
 
-ExecStart=/<replace-with-path-to>apimon/venv/bin/gunicorn -b :80 flaskapp:app
+ExecStart=/<replace-with-path-to>/apimon/venv/bin/gunicorn -b :80 apimon:app
 
 ExecStop=/bin/kill -SIGINT $MAINPID
 

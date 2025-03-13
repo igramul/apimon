@@ -123,3 +123,7 @@ class NeoPixelController(object):
     @property
     def status(self) -> STATUS:
         return self._status
+
+    @property
+    def overflow(self) -> bool:
+        return self._overflow

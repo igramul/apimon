@@ -65,6 +65,7 @@ def get_api_info():
         'tickets': ticket_fetcher.tickets,
         'leds': [color.tuple_str for color in neopixel_controller.leds],
         'status': neopixel_controller.status.name,
+        'overflow': neopixel_controller.overflow,
     })
 
 

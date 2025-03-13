@@ -81,7 +81,8 @@ def job_update_tickets():
     ticket_led_mapper.set_ticket(colors)
     leds = ticket_led_mapper.leds
     neopixel_controller.set_leds(leds)
-
+    overflow = ticket_led_mapper.overflow
+    neopixel_controller.set_overflow(overflow)
 
 @scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():

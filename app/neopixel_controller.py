@@ -60,13 +60,17 @@ class NeoPixelController(object):
         with self._lock:
             self._led_array = leds
 
-    def set_connection_error(self, status) -> None:
+    def set_connection_error(self, status: bool) -> None:
         with self._lock:
             self._connection_error = status
 
-    def set_error(self, status) -> None:
+    def set_error(self, status: bool) -> None:
         with self._lock:
             self._error = status
+
+    def set_overflow(self, status: bool) -> None:
+        with self._lock:
+            self._overflow = status
 
     def update(self) -> None:
         if self._status == STATUS.INIT:
@@ -103,8 +107,13 @@ class NeoPixelController(object):
 
         cycle_time = time.time() % self.PULSING_PERIOD
         pulsing_brightness = int(math.sin(cycle_time * self.PULSING_PERIOD * math.pi / 2) * 255)
-        color = status_color.adjust_brightness(max(pulsing_brightness, 0))
-        self._pixels[0] = (color + self._led_array[0]).tuple
+        color_status = status_color.adjust_brightness(max(pulsing_brightness, 0))
+        self._pixels[0] = (color_status + self._led_array[0]).tuple
+
+        if self._overflow:
+            color_overflow = Color.white.adjust_brightness(max(pulsing_brightness, 0))
+            self._pixels[-1] = (color_overflow + self._led_array[-1]).tuple
+
         self._pixels.show()
 
     @property

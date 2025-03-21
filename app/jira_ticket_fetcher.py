@@ -39,6 +39,7 @@ class JiraTicketFetcher:
 
         self._tickets: OrderedDict[str, str] = OrderedDict()
         self._colors: OrderedDict[Color, str] = OrderedDict()
+        self._timeouts: OrderedDict[str, str] = OrderedDict()
         self._last_update: float = time.time()
 
         try:
@@ -81,10 +82,27 @@ class JiraTicketFetcher:
                 if not self.data_still_valid:
                     self._tickets = OrderedDict()
                     self._colors = OrderedDict()
-                raise ConnectionError('Could not get Jira tickets.')
+                raise ConnectionError(f'Could not access Jira: POST {url}, {data}')
             response_json = json.JSONDecoder().decode(response.text)
             color = self.STATUS_COLOR_MAP.get(status)
             self._tickets[status] = self._colors[color] = response_json.get('total')
+
+        for status in self.STATUS_LIST:
+            timeout = self.STATUS_TIMEOUT_MAP.get(status)
+            jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}" AND created <= {timeout}'
+            data = {
+                'jql': jql,
+                'maxResults': 0,
+                'fields': ['key']
+            }
+            try:
+                response = oauth.post(url=url, json=data)
+            except ConnectionError:
+                if not self.data_still_valid:
+                    self._timeouts = OrderedDict()
+                raise ConnectionError(f'Could not access Jira: POST {url}, {data}')
+            response_json = json.JSONDecoder().decode(response.text)
+            self._timeouts[status] = response_json.get('total')
 
         self._last_update = time.time()
 
@@ -95,6 +113,10 @@ class JiraTicketFetcher:
     @property
     def colors(self) -> OrderedDict:
         return self._colors
+
+    @property
+    def timeouts(self) -> OrderedDict:
+        return self._timeouts
 
     @property
     def data_still_valid(self) -> bool:

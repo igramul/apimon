@@ -15,8 +15,14 @@ from .models.color import Color
 
 class JiraTicketFetcher:
 
-    TIMEOUT: int = 60*60 # 1h
+    TIMEOUT: int = 60*60  # 1h
     STATUS_LIST: List[str] = ['Open', 'In Progress', 'Deferred', 'Checking']
+    STATUS_TIMEOUT_MAP: Dict[str, str] = {
+        'Open': '-3h',
+        'In Progress': '-7d',
+        'Deferred': '-14d',
+        'Checking': '-5w'
+    }
     STATUS_COLOR_MAP: Dict[str, Color] = {
         'Checking': Color.green,
         'Deferred': Color.blue,
@@ -32,7 +38,7 @@ class JiraTicketFetcher:
         self._base_url: str = os.environ.get('BASE_URL')
 
         self._tickets: OrderedDict[str, str] = OrderedDict()
-        self._colors: OrderedDict[Color, str]  = OrderedDict()
+        self._colors: OrderedDict[Color, str] = OrderedDict()
         self._last_update: float = time.time()
 
         try:
@@ -60,7 +66,7 @@ class JiraTicketFetcher:
     def update_tickets(self):
         oauth: OAuth2Session = self._get_oauth_token()
         path: str = 'search'
-        url : str = f'{self._base_url}/{path}'
+        url: str = f'{self._base_url}/{path}'
 
         for status in self.STATUS_LIST:
             jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}"'

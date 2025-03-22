@@ -2,6 +2,7 @@
 PYTHON := python3
 BIN := ./venv/bin
 PYTEST := $(BIN)/pytest
+INSTALL_DIR=/opt/apimon
 
 .PHONY: all
 all: test start
@@ -10,24 +11,27 @@ all: test start
 start:
 	$(BIN)/gunicorn -b :5000 --access-logfile - --error-logfile - apimon:app
 
+.Phony: venv
 venv:
 	$(PYTHON) -m venv venv
-
-.PHONY: venv-upgrade
-venv-upgrade: venv
 	$(BIN)/pip install --upgrade pip setuptools
-
-.Phony: install
-install: venv venv-upgrade
 	$(BIN)/pip install -r requirements.txt
 
-.PHONY: venv-clean
-venv-clean:
+PHONY: clean-all
+clean-all:
 	rm -rf venv
 
 .PHONY: test
-test: install $(PYTEST)
+test: $(PYTEST)
 	PYTHONPATH=. $(PYTEST) ./test/
 
 $(PYTEST):
 	$(BIN)/pip install pytest
+
+.PHONY: install
+install:
+	$(PYTHON) -m venv $(INSTALL_DIR)/venv
+	$(INSTALL_DIR)/venv/bin/pip install --upgrade pip setuptools
+	$(INSTALL_DIR)/venv/bin/pip install -r requirements.txt
+	cp -r apimon.py app $(INSTALL_DIR)
+

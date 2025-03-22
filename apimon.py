@@ -15,7 +15,7 @@ from app.neopixel_controller import NeoPixelController
 
 LED_COUNT = 40
 
-git_info = GitInfo()
+git_info = GitInfo().load_json()
 
 # Load environment variables from .env file
 load_dotenv()
@@ -58,9 +58,10 @@ def get_api_info():
     return jsonify({
         'name': __name__,
         'git_info': {
-            'version': git_info.description,
+            'version': git_info.version,
             'commit': git_info.commit,
             'branch': git_info.branch,
+            'description': git_info.description
         },
         'tickets': ticket_fetcher.tickets,
         'leds': [color.tuple_str for color in neopixel_controller.leds],

@@ -4,4 +4,5 @@
 __pycache__/
 /version.py
 /.last_commit.txt
-.env
+/.env
+/gitinfo.json

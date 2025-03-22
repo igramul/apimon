@@ -64,7 +64,7 @@ def get_api_info():
             'description': git_info.description
         },
         'tickets': ticket_fetcher.tickets,
-        'leds': [color.tuple_str for color in neopixel_controller.leds],
+        'leds': [str(color) for color in neopixel_controller.leds],
         'status': neopixel_controller.status.name,
         'overflow': neopixel_controller.overflow,
     })
@@ -79,8 +79,8 @@ def job_update_tickets():
         neopixel_controller.set_connection_error(True)
     else:
         neopixel_controller.set_connection_error(False)
-    colors = ticket_fetcher.colors
-    ticket_led_mapper.set_ticket(colors)
+    tickets = ticket_fetcher.tickets
+    ticket_led_mapper.set_ticket(tickets)
     leds = ticket_led_mapper.leds
     neopixel_controller.set_leds(leds)
     overflow = ticket_led_mapper.overflow

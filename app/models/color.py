@@ -1,5 +1,11 @@
-from typing import Tuple
+from typing import Tuple, Any
+from enum import Enum, auto
 import random
+import re
+
+
+class ColorEffects(Enum):
+    overdue = auto()
 
 
 class classproperty(property):
@@ -8,10 +14,15 @@ class classproperty(property):
 
 
 class Color(object):
+
+    # Regex für ein Tuple mit 3 Integer
+    TUPLE_REGEX = r'\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)'
+
     def __init__(self, r:int, g:int, b:int):
         self.r = min(r, 255)
         self.g = min(g, 255)
         self.b = min(b, 255)
+        self._effect = None
 
     @classmethod
     def from_hex(cls, hex:int) -> 'Color':
@@ -24,6 +35,16 @@ class Color(object):
     @classmethod
     def from_tuple(cls, color_tuple: Tuple[int, int, int]) -> 'Color':
         return cls(*color_tuple)
+
+    @classmethod
+    def from_tuple_str(cls, color_tuple: str) -> 'Color':
+        match = re.fullmatch(cls.TUPLE_REGEX, color_tuple)
+        if match:
+            elements = match.groups()
+            return cls.from_tuple((int(elements[0]), int(elements[1]), int(elements[2])))
+        else:
+            raise ValueError
+
 
     @classproperty
     def random(cls) -> 'Color':
@@ -81,6 +102,9 @@ class Color(object):
 
         return Color(new_r, new_g, new_b)
 
+    def set_effect(self, effect: ColorEffects):
+        self._effect = effect
+
     def __add__(self, other: 'Color') -> 'Color':
         return Color(
             min(self.r + other.r, 255),
@@ -116,3 +140,13 @@ class Color(object):
     @property
     def char(self) -> str:
         return f'\033[38;2;{self.r};{self.g};{self.b}m■'
+
+    @property
+    def effect(self) -> str:
+        return self._effect
+
+    def __str__(self):
+        if self._effect:
+            return f'{self.tuple_str} {self._effect.name}'
+        else:
+            return self.tuple_str

@@ -10,7 +10,7 @@ except NotImplementedError:
     from .consolepixel import none_board as board
     from .consolepixel import ConsolePixel as Pixel
 
-from .models.color import Color
+from .models.color import Color, ColorEffects
 from .status import STATUS
 
 
@@ -23,7 +23,7 @@ class NeoPixelController(object):
         self._pixels: Pixel = Pixel(board.D18, led_count)
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
-        self._pixel_array = [Color.black.tuple] * led_count
+        self._pixel_array: List[Color] = [Color.black] * led_count
         self._led_array: List[Color] = [Color.black] * led_count
         self._status: STATUS = STATUS.INIT
         self._connection_error: bool = False
@@ -81,8 +81,8 @@ class NeoPixelController(object):
     def _update(self) -> None:
         # update LED array to pixel array
         for index, status_color in enumerate(self._led_array):
-            if self._pixel_array[index] != status_color.tuple:
-                self._pixel_array[index] = status_color.tuple
+            if self._pixel_array[index] != status_color:
+                self._pixel_array[index] = status_color
                 self._pixels[index] = status_color.tuple
 
         # update status
@@ -113,6 +113,12 @@ class NeoPixelController(object):
         if self._overflow:
             color_overflow = Color.white.adjust_brightness(max(pulsing_brightness, 0))
             self._pixels[-1] = (color_overflow + self._led_array[-1]).tuple
+
+        # handle pixel effects
+        pulsing_brightness_overdue = max(int(math.sin(cycle_time * self.PULSING_PERIOD*2 * math.pi / 2) * 255), 0)
+        for i, pixel in enumerate(self._pixel_array):
+            if pixel.effect == ColorEffects.overdue:
+                self._pixels[i] = self._led_array[i].adjust_brightness(pulsing_brightness_overdue).tuple
 
         self._pixels.show()
 

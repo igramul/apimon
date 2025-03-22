@@ -83,3 +83,9 @@ def test_color_tuple():
     # Test getting the tuple value of a color
     color = Color(10, 20, 30)
     assert color.tuple == (10, 20, 30)
+
+def test_color_tuple_str():
+    # Test getting the tuple value of a color
+    color = Color(10, 20, 30)
+    assert color == Color.from_tuple_str(color.tuple_str)
+

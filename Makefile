@@ -37,9 +37,9 @@ install: gitinfo.json
 	$(PYTHON) -m venv $(INSTALL_DIR)/venv
 	$(INSTALL_DIR)/venv/bin/pip install --upgrade pip setuptools
 	$(INSTALL_DIR)/venv/bin/pip install -r requirements.txt
-	cp -r apimon.py app $(INSTALL_DIR)
+	cp -r apimon.py gitinfo.json app $(INSTALL_DIR)
 
-gitinfo.json: venv
+gitinfo.json: venv .git
 	$(BIN)/python -c "from app.gitinfo import GitInfo; GitInfo().save_json()"
 
 

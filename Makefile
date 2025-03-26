@@ -5,7 +5,7 @@ PYTEST := $(BIN)/pytest
 INSTALL_DIR=/opt/apimon
 
 .PHONY: all
-all: test start
+all: gitinfo.json
 
 .PHONY: start
 start: gitinfo.json

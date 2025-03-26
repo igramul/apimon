@@ -18,10 +18,10 @@ class JiraTicketFetcher:
     TIMEOUT: int = 60*60  # 1h
     STATUS_LIST: List[str] = ['Open', 'In Progress', 'Deferred', 'Checking']
     STATUS_TIMEOUT_MAP: Dict[str, str] = {
-        'Open': '-3h',
-        'In Progress': '-1w',
-        'Deferred': '-4w',
-        'Checking': '-6w'
+        'Open': '3h',
+        'In Progress': '1w',
+        'Deferred': '4w',
+        'Checking': '6w'
     }
     STATUS_COLOR_MAP: Dict[str, Color] = {
         'Checking': Color.green,
@@ -86,7 +86,8 @@ class JiraTicketFetcher:
                 self._tickets[status]['count'] = response_json.get('total')
 
                 timeout = self.STATUS_TIMEOUT_MAP.get(status)
-                jql += f'AND created <= {timeout}'
+                self._tickets[status]['timeout'] = timeout
+                jql += f'AND created <= -{timeout}'
                 data = {
                     'jql': jql,
                     'maxResults': 0,

@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict
+from typing import Dict
 import logging
 import os
 import json
@@ -10,24 +10,27 @@ from requests.auth import HTTPBasicAuth
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
-from .models.color import Color
-
 
 class JiraTicketFetcher:
 
     TIMEOUT: int = 60*60  # 1h
-    STATUS_LIST: List[str] = ['Open', 'In Progress', 'Deferred', 'Checking']
-    STATUS_TIMEOUT_MAP: Dict[str, str] = {
-        'Open': '3h',
-        'In Progress': '1w',
-        'Deferred': '4w',
-        'Checking': '6w'
-    }
-    STATUS_COLOR_MAP: Dict[str, Color] = {
-        'Checking': Color.green,
-        'Deferred': Color.blue,
-        'In Progress': Color.magenta,
-        'Open': Color.red
+    STATUS_MAP: Dict[str, Dict[str, str]] = {
+        'Open': {
+            'color': '(255, 0, 0)',
+            'timeout': '3h',
+        },
+        'In Progress': {
+            'color': '(255, 0, 255)',
+            'timeout': '1w',
+        },
+        'Deferred': {
+            'color': '(0, 0, 255)',
+            'timeout': '4w',
+        },
+        'Checking': {
+            'color': '(0, 255, 0)',
+            'timeout': '6w',
+        },
     }
 
     def __init__(self) -> None:
@@ -38,8 +41,6 @@ class JiraTicketFetcher:
         self._base_url: str = os.environ.get('BASE_URL')
 
         self._tickets: OrderedDict[str, dict] = OrderedDict()
-        self._colors: OrderedDict[str, str] = OrderedDict()
-        self._timeouts: OrderedDict[str, str] = OrderedDict()
         self._last_update: float = time.time()
 
         try:
@@ -70,9 +71,9 @@ class JiraTicketFetcher:
         url: str = f'{self._base_url}/{path}'
 
         try:
-            for status in self.STATUS_LIST:
+            for status in self.STATUS_MAP.keys():
                 self._tickets[status] = dict()
-                self._tickets[status]['color'] = self.STATUS_COLOR_MAP.get(status).tuple_str
+                self._tickets[status]['color'] = self.STATUS_MAP.get(status).get('color')
                 jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}"'
                 data = {
                     'jql': jql,
@@ -81,11 +82,9 @@ class JiraTicketFetcher:
                 }
                 response = oauth.post(url=url, json=data)
                 response_json = json.JSONDecoder().decode(response.text)
-                color = self.STATUS_COLOR_MAP.get(status)
-                self._colors[color.tuple_str] = response_json.get('total')
                 self._tickets[status]['count'] = response_json.get('total')
 
-                timeout = self.STATUS_TIMEOUT_MAP.get(status)
+                timeout = self.STATUS_MAP.get(status).get('timeout')
                 self._tickets[status]['timeout'] = timeout
                 jql += f'AND created <= -{timeout}'
                 data = {
@@ -95,14 +94,11 @@ class JiraTicketFetcher:
                 }
                 response = oauth.post(url=url, json=data)
                 response_json = json.JSONDecoder().decode(response.text)
-                self._timeouts[status] = response_json.get('total')
                 self._tickets[status]['overdue'] = response_json.get('total')
 
         except ConnectionError:
             if not self.data_still_valid:
                 self._tickets = OrderedDict()
-                self._colors = OrderedDict()
-                self._timeouts = OrderedDict()
             raise ConnectionError(f'Could not access Jira: {url}')
 
         self._last_update = time.time()

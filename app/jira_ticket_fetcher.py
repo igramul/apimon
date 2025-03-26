@@ -72,8 +72,7 @@ class JiraTicketFetcher:
 
         try:
             for status in self.STATUS_MAP.keys():
-                self._tickets[status] = dict()
-                self._tickets[status]['color'] = self.STATUS_MAP.get(status).get('color')
+                self._tickets[status] = self.STATUS_MAP.get(status)
                 jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}"'
                 data = {
                     'jql': jql,
@@ -84,9 +83,7 @@ class JiraTicketFetcher:
                 response_json = json.JSONDecoder().decode(response.text)
                 self._tickets[status]['count'] = response_json.get('total')
 
-                timeout = self.STATUS_MAP.get(status).get('timeout')
-                self._tickets[status]['timeout'] = timeout
-                jql += f'AND created <= -{timeout}'
+                jql += 'AND created <= -%s' % self._tickets[status].get('timeout')
                 data = {
                     'jql': jql,
                     'maxResults': 0,

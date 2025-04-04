@@ -40,7 +40,7 @@ scheduler = APScheduler()
 
 def scheduler_listener(event):
     if event.exception:
-        logging.error(f"Scheduler task {event.job_id} failed: {event.exception}")
+        logging.error(f'Scheduler task {event.job_id} failed: {event.exception}')
         neopixel_controller.set_error(True)
     else:
         neopixel_controller.set_error(False)
@@ -85,6 +85,7 @@ def job_update_tickets():
     neopixel_controller.set_leds(leds)
     overflow = ticket_led_mapper.overflow
     neopixel_controller.set_overflow(overflow)
+
 
 @scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():

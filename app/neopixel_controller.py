@@ -115,7 +115,7 @@ class NeoPixelController(object):
             self._pixels[-1] = (color_overflow + self._led_array[-1]).tuple
 
         # handle pixel effects
-        pulsing_brightness_overdue = max(int(math.sin(cycle_time * self.PULSING_PERIOD*2 * math.pi / 2) * 255), 0)
+        pulsing_brightness_overdue = max(int(math.sin(cycle_time * self.PULSING_PERIOD*2 * math.pi / 2) * 128)+192, 0)
         for i, pixel in enumerate(self._pixel_array):
             if pixel.effect == ColorEffects.overdue:
                 self._pixels[i] = self._led_array[i].adjust_brightness(pulsing_brightness_overdue).tuple

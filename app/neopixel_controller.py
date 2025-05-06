@@ -6,6 +6,8 @@ import math
 try:
     import board
     from neopixel import NeoPixel as Pixel
+except ModuleNotFoundError:
+    from .rpi_ws281x_pixel import board, Pixel
 except NotImplementedError:
     from .consolepixel import none_board as board
     from .consolepixel import ConsolePixel as Pixel

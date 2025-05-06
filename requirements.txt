@@ -7,3 +7,4 @@ requests-oauthlib==2.0.0
 oauthlib~=3.2.2
 requests~=2.32.3
 adafruit-circuitpython-neopixel==6.3.15
+rpi_ws281x==5.0.0

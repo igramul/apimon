@@ -14,7 +14,7 @@ LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
 class board(object):
-    D18 = 16
+    D18 = 18
     D12 = 12
 
 

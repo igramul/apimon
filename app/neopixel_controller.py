@@ -25,7 +25,7 @@ class NeoPixelController(object):
         pin = board.D18
         if gpio_pin == 12:
             pin = board.D12
-        self._pixels: Pixel = Pixel(pin, led_count)
+        self._pixels: Pixel = Pixel(led_pin=pin, led_count=led_count)
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
         self._pixel_array: List[Color] = [Color.black] * led_count

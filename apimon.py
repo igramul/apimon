@@ -21,8 +21,8 @@ git_info = GitInfo().load_json()
 load_dotenv()
 
 ticket_fetcher = JiraTicketFetcher()
-ticket_led_mapper = TicketLedMapper(LED_COUNT)
-neopixel_controller = NeoPixelController(LED_COUNT)
+ticket_led_mapper = TicketLedMapper(led_count=LED_COUNT)
+neopixel_controller = NeoPixelController(led_count=LED_COUNT, gpio_pin=18)
 
 
 # set configuration values

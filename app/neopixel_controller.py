@@ -20,9 +20,12 @@ class NeoPixelController(object):
 
     PULSING_PERIOD = 2
 
-    def __init__(self, led_count: int) -> None:
+    def __init__(self, led_count: int, gpio_pin: int) -> None:
         self._lock: Lock = Lock()
-        self._pixels: Pixel = Pixel(board.D18, led_count)
+        pin = board.D18
+        if gpio_pin == 12:
+            pin = board.D12
+        self._pixels: Pixel = Pixel(pin, led_count)
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
         self._pixel_array: List[Color] = [Color.black] * led_count

@@ -3,8 +3,8 @@ from rpi_ws281x import PixelStrip, Color as rpi_color
 from .models.color import Color
 
 # LED strip configuration:
-LED_COUNT = 16        # Number of LED pixels.
-LED_PIN = 18          # GPIO pin connected to the pixels (18 uses PWM!).
+# LED_COUNT = 16        # Number of LED pixels.
+# LED_PIN = 18          # GPIO pin connected to the pixels (18 uses PWM!).
 # LED_PIN = 10        # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 10          # DMA channel to use for generating signal (try 10)
@@ -14,7 +14,8 @@ LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
 class board(object):
-    D18 = LED_PIN
+    D18 = 16
+    D12 = 12
 
 
 class Pixel(object):

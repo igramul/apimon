@@ -20,7 +20,8 @@ git_info = GitInfo().load_json()
 # Load environment variables from .env file
 load_dotenv()
 
-ticket_fetcher = JiraTicketFetcher()
+ticket_fetcher = JiraTicketFetcher(name='APIM', jira_filter='project = AITG AND component = APIM-Betrieb')
+#ticket_fetcher = JiraTicketFetcher(name='Kafka', jira_filter='project = KAFKABETR')
 ticket_led_mapper = TicketLedMapper(led_count=LED_COUNT)
 neopixel_controller = NeoPixelController(led_count=LED_COUNT, gpio_pin=18)
 

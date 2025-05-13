@@ -33,12 +33,15 @@ class JiraTicketFetcher:
         },
     }
 
-    def __init__(self) -> None:
+    def __init__(self, name: str, jira_filter: str) -> None:
         self._token_url: str = os.environ.get('ACCESS_TOKEN_URL')
         self._client_id: str = os.environ.get('CLIENT_ID')
         self._client_secret: str = os.environ.get('CLIENT_SECRET')
         self.scope: str = os.environ.get('SCOPE')
         self._base_url: str = os.environ.get('BASE_URL')
+
+        self.name = name
+        self.jira_filter = jira_filter
 
         self._tickets: OrderedDict[str, dict] = OrderedDict()
         self._last_update: float = time.time()
@@ -73,7 +76,7 @@ class JiraTicketFetcher:
         try:
             for status in self.STATUS_MAP.keys():
                 self._tickets[status] = self.STATUS_MAP.get(status)
-                jql = f'project = AITG AND component = APIM-Betrieb AND status = "{status}"'
+                jql = f'{self.jira_filter} AND status = "{status}"'
                 data = {
                     'jql': jql,
                     'maxResults': 0,

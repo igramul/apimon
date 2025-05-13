@@ -94,6 +94,7 @@ def job_update_pixels():
 
 def cleanup():
     scheduler.shutdown()
+    neopixel_controller.clear()
 
 
 atexit.register(cleanup)

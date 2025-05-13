@@ -38,6 +38,9 @@ class NeoPixelController(object):
         self._status = STATUS.WORKING
 
     def __del__(self) -> None:
+        self.clear()
+
+    def clear(self) -> None:
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
 

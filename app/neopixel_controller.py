@@ -4,7 +4,7 @@ import time
 import math
 
 try:
-    from neopixel import NeoPixel as Pixel
+    from .neopixelwrapper import Pixel
 except ModuleNotFoundError:
     from .rpi_ws281x_pixel import Pixel
 except NotImplementedError:

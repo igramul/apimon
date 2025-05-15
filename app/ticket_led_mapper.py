@@ -7,8 +7,9 @@ from .models.color import Color, ColorEffects
 
 class TicketLedMapper(object):
 
-    def __init__(self, led_count: int) -> None:
+    def __init__(self, led_count: int, name: str) -> None:
         self._led_count: int = led_count
+        self.name = name
         self._leds: List[Color] = [Color.black] * self._led_count
         self._overflow: bool = False
 

@@ -4,12 +4,10 @@ import time
 import math
 
 try:
-    import board
     from neopixel import NeoPixel as Pixel
 except ModuleNotFoundError:
-    from .rpi_ws281x_pixel import board, Pixel
+    from .rpi_ws281x_pixel import Pixel
 except NotImplementedError:
-    from .consolepixel import none_board as board
     from .consolepixel import ConsolePixel as Pixel
 
 from .models.color import Color, ColorEffects
@@ -20,12 +18,11 @@ class NeoPixelController(object):
 
     PULSING_PERIOD = 2
 
-    def __init__(self, led_count: int, gpio_pin: int) -> None:
+    def __init__(self, led_count: int, gpio_pin: int, name: str, cycle_time_offset: int = 0) -> None:
         self._lock: Lock = Lock()
-        pin = board.D18
-        if gpio_pin == 12:
-            pin = board.D12
-        self._pixels: Pixel = Pixel(pin, led_count)
+        self._pixels: Pixel = Pixel(gpio_pin, led_count, name)
+        self.name = name
+        self._cycle_time_offset = cycle_time_offset
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
         self._pixel_array: List[Color] = [Color.black] * led_count
@@ -113,7 +110,7 @@ class NeoPixelController(object):
         else:
             status_color = Color.black
 
-        cycle_time = time.time() % self.PULSING_PERIOD
+        cycle_time = time.time() % self.PULSING_PERIOD + self._cycle_time_offset
         pulsing_brightness = int(math.sin(cycle_time * self.PULSING_PERIOD * math.pi / 2) * 255)
         color_status = status_color.adjust_brightness(max(pulsing_brightness, 0))
         self._pixels[0] = (color_status + self._led_array[0]).tuple

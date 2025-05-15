@@ -20,13 +20,17 @@ git_info = GitInfo().load_json()
 # Load environment variables from .env file
 load_dotenv()
 
-ticket_fetcher = JiraTicketFetcher(name='APIM', jira_filter='project = AITG AND component = APIM-Betrieb')
-#ticket_fetcher = JiraTicketFetcher(name='Kafka', jira_filter='project = KAFKABETR')
-ticket_led_mapper = TicketLedMapper(led_count=LED_COUNT)
-neopixel_controller = NeoPixelController(led_count=LED_COUNT, gpio_pin=18)
+# Initialisiere die benötigten Komponenten
+apim_ticket_fetcher = JiraTicketFetcher(name='APIM', jira_filter='project = AITG AND component = APIM-Betrieb')
+apim_ticket_led_mapper = TicketLedMapper(led_count=LED_COUNT, name='APIM')
+apim_neopixel_controller = NeoPixelController(led_count=LED_COUNT, gpio_pin=18, name='APIM')
+
+kafka_ticket_fetcher = JiraTicketFetcher(name='Kafka', jira_filter='project = KAFKABETR')
+kafka_ticket_led_mapper = TicketLedMapper(led_count=LED_COUNT, name='Kafka')
+kafka_neopixel_controller = NeoPixelController(led_count=LED_COUNT, gpio_pin=19, name='Kafka', cycle_time_offset=1)
 
 
-# set configuration values
+# Setze Konfigurationswerte für den Scheduler
 class Config:
     SCHEDULER_API_ENABLED = False
 
@@ -35,16 +39,14 @@ logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 app.config.from_object(Config())
 
-# initialize scheduler
+# Initialisiere Scheduler
 scheduler = APScheduler()
 
 
+# Listener, der über den Ausgang der Scheduler-Tasks informiert
 def scheduler_listener(event):
     if event.exception:
         logging.error(f'Scheduler task {event.job_id} failed: {event.exception}')
-        neopixel_controller.set_error(True)
-    else:
-        neopixel_controller.set_error(False)
 
 
 scheduler.add_listener(scheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
@@ -64,42 +66,81 @@ def get_api_info():
             'branch': git_info.branch,
             'description': git_info.description
         },
-        'tickets': ticket_fetcher.tickets,
-        'leds': [str(color) for color in neopixel_controller.leds],
-        'status': neopixel_controller.status.name,
-        'overflow': neopixel_controller.overflow,
+        'led_stripes':
+        {
+            'apim': {
+                'tickets': apim_ticket_fetcher.tickets,
+                'leds': [str(color) for color in apim_neopixel_controller.leds],
+                'status': apim_neopixel_controller.status.name,
+                'overflow': apim_neopixel_controller.overflow
+            },
+            'kafka:': {
+                'tickets': kafka_ticket_fetcher.tickets,
+                'leds': [str(color) for color in kafka_neopixel_controller.leds],
+                'status': kafka_neopixel_controller.status.name,
+                'overflow': kafka_neopixel_controller.overflow
+            }
+        }
     })
 
 
+# Scheduler-Task für APIM-Tickets mit erweiterter Exception-Behandlung
 @scheduler.task('cron', id='do_job_update_tickets', minute='*/1')
 def job_update_tickets():
     try:
-        ticket_fetcher.update_tickets()
-    except ConnectionError as e:
-        logging.error(e)
-        neopixel_controller.set_connection_error(True)
+        apim_ticket_fetcher.update_tickets()
+        tickets = apim_ticket_fetcher.tickets
+        apim_ticket_led_mapper.set_ticket(tickets)
+        leds = apim_ticket_led_mapper.leds
+        apim_neopixel_controller.set_leds(leds)
+        overflow = apim_ticket_led_mapper.overflow
+        apim_neopixel_controller.set_overflow(overflow)
+        apim_neopixel_controller.set_error(False)
+    except ConnectionError as ce:
+        logging.error("ConnectionError beim Aktualisieren der APIM-Tickets: %s", ce)
+        apim_neopixel_controller.set_connection_error(True)
+    except Exception as exc:
+        logging.exception("Unerwarteter Fehler beim Aktualisieren der APIM-Tickets: %s", exc)
+        apim_neopixel_controller.set_error(True)
     else:
-        neopixel_controller.set_connection_error(False)
-    tickets = ticket_fetcher.tickets
-    ticket_led_mapper.set_ticket(tickets)
-    leds = ticket_led_mapper.leds
-    neopixel_controller.set_leds(leds)
-    overflow = ticket_led_mapper.overflow
-    neopixel_controller.set_overflow(overflow)
+        apim_neopixel_controller.set_connection_error(False)
+        apim_neopixel_controller.set_error(False)
 
+    try:
+        kafka_ticket_fetcher.update_tickets()
+        tickets = kafka_ticket_fetcher.tickets
+        kafka_ticket_led_mapper.set_ticket(tickets)
+        leds = kafka_ticket_led_mapper.leds
+        kafka_neopixel_controller.set_leds(leds)
+        overflow = kafka_ticket_led_mapper.overflow
+        kafka_neopixel_controller.set_overflow(overflow)
+        kafka_neopixel_controller.set_error(False)
+    except ConnectionError as ce:
+        logging.error("ConnectionError beim Aktualisieren der Kafka-Tickets: %s", ce)
+        kafka_neopixel_controller.set_connection_error(True)
+    except Exception as exc:
+        logging.exception("Unerwarteter Fehler beim Aktualisieren der Kafka-Tickets: %s", exc)
+        kafka_neopixel_controller.set_error(True)
+    else:
+        kafka_neopixel_controller.set_connection_error(False)
+        kafka_neopixel_controller.set_error(False)
 
+# Scheduler-Task für das regelmässige Update der LEDs
 @scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():
-    neopixel_controller.update()
+    apim_neopixel_controller.update()
+    kafka_neopixel_controller.update()
 
 
+# Clean-up-Funktion, die beim Beenden der Anwendung ausgeführt wird
 def cleanup():
     scheduler.shutdown()
-    neopixel_controller.clear()
-
+    apim_neopixel_controller.clear()
+    kafka_neopixel_controller.clear()
 
 atexit.register(cleanup)
 
+# Initialer Aufruf der Ticket-Updates, um beim Start den aktuellen Status zu erhalten
 job_update_tickets()
 
 if __name__ == '__main__':

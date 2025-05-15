@@ -8,21 +8,26 @@ LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 10          # DMA channel to use for generating signal (try 10)
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+# LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 
-class board(object):
-    D18 = 18
-    D12 = 12
+def get_led_channel(pin):
+    if pin in [ 13, 19, 41, 45, 53]:
+        return 1
+    else:
+        return 0
 
 
 class Pixel(object):
 
-    def __init__(self, led_pin: int, led_count: int):
+    def __init__(self, led_pin: int, led_count: int, name: str):
         # Create NeoPixel object with appropriate configuration.
-        self.strip = PixelStrip(led_count, led_pin, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+        led_channel = get_led_channel(led_pin)
+        print(f'name={name}, pin={led_pin}, LED_CHANNEL={led_channel}')
+        self.strip = PixelStrip(led_count, led_pin, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, led_channel)
         # Initialize the library (must be called once before other functions).
         self.strip.begin()
+        self.name = name
 
     def fill(self, color: tuple):
         for i in range(self.strip.numPixels()):

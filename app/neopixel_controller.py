@@ -16,13 +16,13 @@ from .status import STATUS
 
 class NeoPixelController(object):
 
-    PULSING_PERIOD = 2
+    PULSING_PERIOD: float = 2.0
 
-    def __init__(self, led_count: int, gpio_pin: int, name: str, cycle_time_offset: int = 0) -> None:
+    def __init__(self, led_count: int, gpio_pin: int, name: str, offset: float = 0) -> None:
         self._lock: Lock = Lock()
         self._pixels: Pixel = Pixel(gpio_pin, led_count, name)
-        self.name = name
-        self._cycle_time_offset = cycle_time_offset
+        self.name: str = name
+        self._cycle_time_offset: float = offset
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
         self._pixel_array: List[Color] = [Color.black] * led_count

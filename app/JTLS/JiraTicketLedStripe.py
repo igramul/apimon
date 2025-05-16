@@ -16,7 +16,7 @@ class JiraTicketLedStripe(object):
 
         self._ticket_fetcher = JiraTicketFetcher(name=name, jira_filter=jira_filter)
         self._ticket_led_mapper = TicketLedMapper(led_count=led_count, name=name)
-        self._neopixel_controller = NeoPixelController(led_count=led_count, gpio_pin=gpio_pin, name=name)
+        self._neopixel_controller = NeoPixelController(led_count=led_count, gpio_pin=gpio_pin, name=name, offset=offset)
 
     @property
     def tickets(self):

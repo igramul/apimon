@@ -6,3 +6,5 @@ __pycache__/
 /.last_commit.txt
 /.env
 /gitinfo.json
+/config.json
+

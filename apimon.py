@@ -1,5 +1,6 @@
 import logging
 import atexit
+import threading
 
 from flask import Flask, jsonify
 from flask_apscheduler import APScheduler
@@ -7,8 +8,14 @@ from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from dotenv import load_dotenv
 
 from app.JTLS import JiraTicketLedStripeList
-
 from app.gitinfo import GitInfo
+
+# Versuche QtPixel zu importieren, um zu prüfen ob Qt verwendet wird
+try:
+    from app.qtpixel import QtPixel
+    USING_QT = True
+except (ImportError, ModuleNotFoundError):
+    USING_QT = False
 
 LED_COUNT = 40
 
@@ -85,4 +92,37 @@ atexit.register(cleanup)
 jira_tickets_led_stripes.update_tickets()
 
 if __name__ == '__main__':
-    app.run()
+    if USING_QT:
+        # Wenn Qt verwendet wird, verwende QTimer für LED-Updates (thread-safe)
+        # und APScheduler nur für Ticket-Updates
+        logging.info("Qt-Modus erkannt - verwende QTimer für LED-Updates")
+
+        from PyQt5.QtCore import QTimer
+
+        # Erstelle Timer für LED-Updates (100ms = 0.1s)
+        pixel_timer = QTimer()
+        pixel_timer.timeout.connect(lambda: jira_tickets_led_stripes.update_pixels())
+        pixel_timer.start(100)  # 100ms
+
+        # Flask in separatem Thread für API
+        flask_thread = threading.Thread(target=lambda: app.run(use_reloader=False, threaded=True, host='0.0.0.0'))
+        flask_thread.daemon = True
+        flask_thread.start()
+
+        logging.info("Flask läuft im Hintergrund")
+        logging.info("QTimer aktualisiert LEDs alle 100ms")
+        logging.info("Drücke Ctrl+C zum Beenden")
+
+        # Deaktiviere den Pixel-Update-Job des Schedulers (nur für Qt-Modus)
+        scheduler.remove_job('do_job_update_pixels')
+
+        # Starte Qt Event Loop im Hauptthread
+        try:
+            QtPixel.run_app()
+        except KeyboardInterrupt:
+            logging.info("Beende Anwendung...")
+            pixel_timer.stop()
+            cleanup()
+    else:
+        # Normaler Modus für Hardware-LEDs oder Console
+        app.run()

@@ -6,9 +6,18 @@ import math
 try:
     from .neopixelwrapper import Pixel
 except ModuleNotFoundError:
-    from .rpi_ws281x_pixel import Pixel
+    try:
+        from .rpi_ws281x_pixel import Pixel
+    except ModuleNotFoundError:
+        try:
+            from .qtpixel import QtPixel as Pixel
+        except (ModuleNotFoundError, ImportError):
+            from .consolepixel import ConsolePixel as Pixel
 except NotImplementedError:
-    from .consolepixel import ConsolePixel as Pixel
+    try:
+        from .qtpixel import QtPixel as Pixel
+    except (ModuleNotFoundError, ImportError):
+        from .consolepixel import ConsolePixel as Pixel
 
 from .models.color import Color, ColorEffects
 from .status import STATUS
@@ -23,6 +32,11 @@ class NeoPixelController(object):
         self._pixels: Pixel = Pixel(gpio_pin, led_count, name)
         self.name: str = name
         self._cycle_time_offset: float = offset
+
+        # Initialisiere die Pixel-Instanz (wichtig für QtPixel und ConsolePixel)
+        if hasattr(self._pixels, 'init'):
+            self._pixels.init()
+
         self._pixels.fill(Color.black.tuple)
         self._pixels.show()
         self._pixel_array: List[Color] = [Color.black] * led_count

@@ -34,6 +34,7 @@ class JiraTicketFetcher:
     }
 
     def __init__(self, name: str, jira_filter: str) -> None:
+        self.logger = logging.getLogger(f'{__name__}.{name}')
         self._token_url: str = os.environ.get('ACCESS_TOKEN_URL')
         self._client_id: str = os.environ.get('CLIENT_ID')
         self._client_secret: str = os.environ.get('CLIENT_SECRET')
@@ -49,7 +50,7 @@ class JiraTicketFetcher:
         try:
             self.update_tickets()
         except ConnectionError as e:
-            logging.error(e)
+            self.logger.error(e)
 
     def _get_oauth_token(self) -> OAuth2Session:
 
@@ -62,6 +63,7 @@ class JiraTicketFetcher:
                 scope=self.scope
             )
         except ConnectionError:
+            self.logger.debug(f'Could not get OAuth token for client_id: {self._client_id}')
             if not self.data_still_valid:
                 self._tickets = OrderedDict()
                 self._colors = OrderedDict()
@@ -84,7 +86,9 @@ class JiraTicketFetcher:
                 }
                 response = oauth.post(url=url, json=data)
                 response_json = json.JSONDecoder().decode(response.text)
-                self._tickets[status]['count'] = response_json.get('total')
+                total = response_json.get('total')
+                self.logger.debug(f'Total Jira tickets {status}: {total}')
+                self._tickets[status]['count'] = total
 
                 jql += 'AND created <= -%s' % self._tickets[status].get('timeout')
                 data = {
@@ -94,9 +98,12 @@ class JiraTicketFetcher:
                 }
                 response = oauth.post(url=url, json=data)
                 response_json = json.JSONDecoder().decode(response.text)
-                self._tickets[status]['overdue'] = response_json.get('total')
+                total = response_json.get('total')
+                self.logger.debug(f'Overdue Jira tickets {status}: {total}')
+                self._tickets[status]['overdue'] = total
 
         except ConnectionError:
+            self.logger.debug(f'Could not access {self.name} Jira at: {url}')
             if not self.data_still_valid:
                 self._tickets = OrderedDict()
             raise ConnectionError(f'Could not access Jira: {url}')

@@ -8,3 +8,4 @@ oauthlib~=3.3.1
 requests==2.32.5
 adafruit-circuitpython-neopixel==6.3.18
 rpi_ws281x==5.0.0; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
+PyQt5==5.15.11; platform_system != "Linux" or (platform_machine != "armv7l" and platform_machine != "aarch64")

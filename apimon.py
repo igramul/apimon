@@ -68,7 +68,7 @@ def job_update_tickets():
 
 
 # Scheduler-Task für das regelmässige Update der LEDs
-@scheduler.task('interval', id='do_job_update_pixels', seconds=0.5)
+@scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
 def job_update_pixels():
     try:
         jira_tickets_led_stripes.update_pixels()

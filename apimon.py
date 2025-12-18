@@ -68,9 +68,12 @@ def job_update_tickets():
 
 
 # Scheduler-Task für das regelmässige Update der LEDs
-@scheduler.task('interval', id='do_job_update_pixels', seconds=0.1)
+@scheduler.task('interval', id='do_job_update_pixels', seconds=0.5)
 def job_update_pixels():
-    jira_tickets_led_stripes.update_pixels()
+    try:
+        jira_tickets_led_stripes.update_pixels()
+    except Exception as e:
+        logging.error(f"Error in job_update_pixels: {e}", exc_info=True)
 
 
 # Clean-up-Funktion, die beim Beenden der Anwendung ausgeführt wird

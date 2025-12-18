@@ -28,13 +28,30 @@ class Pixel(object):
         # Initialize the library (must be called once before other functions).
         self.strip.begin()
         self.name = name
+        self._initialized = True
+
+    def __del__(self):
+        """Cleanup when object is destroyed"""
+        if hasattr(self, '_initialized') and self._initialized:
+            try:
+                # Clear all pixels before cleanup
+                for i in range(self.strip.numPixels()):
+                    self.strip.setPixelColor(i, rpi_color(0, 0, 0))
+                self.strip.show()
+            except Exception:
+                pass  # Ignore errors during cleanup
 
     def fill(self, color: tuple):
         for i in range(self.strip.numPixels()):
             self.strip.setPixelColor(i, rpi_color(*color))
 
     def show(self):
-        self.strip.show()
+        try:
+            self.strip.show()
+        except Exception as e:
+            import logging
+            logging.error(f"Error showing pixels for {self.name}: {e}")
+            raise
 
     @property
     def n(self) -> int:
@@ -42,3 +59,13 @@ class Pixel(object):
 
     def __setitem__(self, key: int, color: tuple):
         self.strip.setPixelColor(key, rpi_color(*color))
+
+    def __getitem__(self, key: int):
+        """Get current pixel color for comparison"""
+        pixel_color = self.strip.getPixelColor(key)
+        # Convert back to tuple (r, g, b)
+        return (
+            (pixel_color >> 16) & 0xFF,
+            (pixel_color >> 8) & 0xFF,
+            pixel_color & 0xFF
+        )

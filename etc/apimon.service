@@ -10,7 +10,7 @@ Group=root
 
 Restart=always
 
-ExecStart=/<replace-with-path-to>/apimon/venv/bin/gunicorn -b :80 apimon:app
+ExecStart=/<replace-with-path-to>/apimon/venv/bin/gunicorn -c /<replace-with-path-to>/apimon/etc/gunicorn_config.py apimon:app
 
 ExecStop=/bin/kill -SIGINT $MAINPID
 

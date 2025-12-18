@@ -84,11 +84,14 @@ class NeoPixelController(object):
             self._update()
 
     def _update(self) -> None:
+        needs_update = False
+
         # update LED array to pixel array
         for index, status_color in enumerate(self._led_array):
             if self._pixel_array[index] != status_color:
                 self._pixel_array[index] = status_color
                 self._pixels[index] = status_color.tuple
+                needs_update = True
 
         # update status
         if self._error:
@@ -113,19 +116,34 @@ class NeoPixelController(object):
         cycle_time = time.time() % self.PULSING_PERIOD + self._cycle_time_offset
         pulsing_brightness = int(math.sin(cycle_time * self.PULSING_PERIOD * math.pi / 2) * 255)
         color_status = status_color.adjust_brightness(max(pulsing_brightness, 0))
-        self._pixels[0] = (color_status + self._led_array[0]).tuple
+        new_status_color = (color_status + self._led_array[0]).tuple
+        if self._pixels[0] != new_status_color:
+            self._pixels[0] = new_status_color
+            needs_update = True
 
         if self._overflow:
             color_overflow = Color.white.adjust_brightness(max(pulsing_brightness, 0))
-            self._pixels[-1] = (color_overflow + self._led_array[-1]).tuple
+            new_overflow_color = (color_overflow + self._led_array[-1]).tuple
+            if self._pixels[-1] != new_overflow_color:
+                self._pixels[-1] = new_overflow_color
+                needs_update = True
 
         # handle pixel effects
         pulsing_brightness_overdue = min(max(int(math.sin(cycle_time * self.PULSING_PERIOD*2 * math.pi / 2) * 128)+192, 0), 255)
         for i, pixel in enumerate(self._pixel_array):
             if pixel.effect == ColorEffects.overdue:
-                self._pixels[i] = self._led_array[i].adjust_brightness(pulsing_brightness_overdue).tuple
+                new_color = self._led_array[i].adjust_brightness(pulsing_brightness_overdue).tuple
+                if self._pixels[i] != new_color:
+                    self._pixels[i] = new_color
+                    needs_update = True
 
-        self._pixels.show()
+        # Only call show() if something actually changed
+        if needs_update:
+            try:
+                self._pixels.show()
+            except Exception as e:
+                import logging
+                logging.error(f"Error updating pixels for {self.name}: {e}")
 
     @property
     def leds(self) -> List[Color]:

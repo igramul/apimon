@@ -55,7 +55,12 @@ class JiraTicketLedStripe(object):
             self._neopixel_controller.set_error(False)
 
     def update_pixels(self):
-        self._neopixel_controller.update()
+        try:
+            self._neopixel_controller.update()
+        except Exception as e:
+            logging.error(f"Error updating pixels for {self.name}: {e}", exc_info=True)
+            # Set error state but don't crash
+            self._neopixel_controller.set_error(True)
 
     def clear(self):
         self._neopixel_controller.clear()

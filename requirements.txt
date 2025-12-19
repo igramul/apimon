@@ -6,5 +6,5 @@ gunicorn==23.0.0
 requests-oauthlib==2.0.0
 oauthlib~=3.3.1
 requests==2.32.5
-adafruit-circuitpython-neopixel==6.3.18
+adafruit-circuitpython-neopixel==6.3.18; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
 rpi_ws281x==5.0.0; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")

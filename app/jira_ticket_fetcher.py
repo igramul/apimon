@@ -85,7 +85,13 @@ class JiraTicketFetcher:
                     'fields': ['key']
                 }
                 response_status = oauth.post(url=url, json=data)
-                response_status_json = json.JSONDecoder().decode(response_status.text)
+                try:
+                    response_status_json = json.JSONDecoder().decode(response_status.text)
+                except json.decoder.JSONDecodeError:
+                    self.logger.debug(f'Could not decode JSON response from Jira: {response_status.text}')
+                    if not self.data_still_valid:
+                        self._tickets = OrderedDict()
+                    raise ConnectionError('Could not decode JSON response from Jira.')
                 total_status = response_status_json.get('total')
                 self.logger.debug(f'Total Jira tickets {status}: {total_status}')
                 self._tickets[status]['count'] = total_status
@@ -98,7 +104,13 @@ class JiraTicketFetcher:
                     'fields': ['key']
                 }
                 response_timeout = oauth.post(url=url, json=data)
-                response_timeout_json = json.JSONDecoder().decode(response_timeout.text)
+                try:
+                    response_timeout_json = json.JSONDecoder().decode(response_timeout.text)
+                except json.decoder.JSONDecodeError:
+                    self.logger.debug(f'Could not decode JSON response from Jira: {response_timeout.text}')
+                    if not self.data_still_valid:
+                        self._tickets = OrderedDict()
+                    raise ConnectionError('Could not decode JSON response from Jira.')
                 total_timeout = response_timeout_json.get('total')
                 self.logger.debug(f'Overdue Jira tickets {status}: {total_timeout}')
                 self._tickets[status]['overdue'] = total_timeout

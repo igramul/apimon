@@ -1,3 +1,4 @@
+import os
 import logging
 import atexit
 import threading
@@ -17,15 +18,13 @@ try:
 except (ImportError, ModuleNotFoundError):
     USING_QT = False
 
-LED_COUNT = 40
-
 git_info = GitInfo().load_json()
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialisiere die benötigten Komponenten
-jira_tickets_led_stripes = JiraTicketLedStripeList()
+jira_tickets_led_stripes = JiraTicketLedStripeList(config_file=os.environ.get('CONFIG_FILE', 'config.json'))
 
 
 # Setze Konfigurationswerte für den Scheduler

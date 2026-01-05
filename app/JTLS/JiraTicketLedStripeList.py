@@ -5,10 +5,10 @@ from .JiraTicketLedStripe import JiraTicketLedStripe
 
 class JiraTicketLedStripeList(list):
 
-    def __init__(self):
+    def __init__(self, config_file: str = 'config.json'):
         super().__init__()
         self._jira_tickets_led_stripes = list()
-        with open('config.json', 'r') as f:
+        with open(config_file, 'r') as f:
             config = json.load(f)
             for led_stripe in config:
                 self.append(

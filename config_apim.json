@@ -1,0 +1,9 @@
+[
+  {
+    "name": "APIM",
+    "jira_filter": "project = AITG AND component = APIM-Betrieb",
+    "gpio_pin": 18,
+    "led_count": 40,
+    "offset": 0.0
+  }
+]

@@ -1,0 +1,23 @@
+[Unit]
+Description=AINT Jira Betriebs Board Tickets Anzeige
+After=network.target
+
+[Service]
+WorkingDirectory=/home/apimon/Work/apimon
+
+User=root
+Group=root
+
+Restart=always
+
+Environment="CONFIG_FILE=config_%i.json"
+
+ExecStart=/home/apimon/Work/apimon/venv/bin/gunicorn -c /home/apimon/Work/apimon/etc/gunicorn_%i_config.py apimon:app
+
+ExecStop=/bin/kill -SIGINT $MAINPID
+
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+

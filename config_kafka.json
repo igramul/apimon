@@ -1,0 +1,9 @@
+[
+  {
+    "name": "Kafka",
+    "jira_filter": "project = KAFKABETR",
+    "gpio_pin": 19,
+    "led_count": 40,
+    "offset": 1.0
+  }
+]

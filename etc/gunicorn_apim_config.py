@@ -23,7 +23,7 @@ accesslog = "-"
 errorlog = "-"
 
 # Process naming
-proc_name = "apimon"
+proc_name = "apimon APIM"
 
 # Preload application to save memory
 preload_app = False  # Set to False to avoid scheduler conflicts with worker processes
@@ -32,10 +32,10 @@ preload_app = False  # Set to False to avoid scheduler conflicts with worker pro
 def post_fork(server, worker):
     """Called after a worker has been forked."""
     import logging
-    logging.info(f"Worker spawned (pid: {worker.pid})")
+    logging.info(f"Apimon APIM Worker spawned (pid: {worker.pid})")
 
 def worker_exit(server, worker):
     """Called when a worker is about to exit."""
     import logging
-    logging.info(f"Worker exiting (pid: {worker.pid})")
+    logging.info(f"Apimon APIM Worker exiting (pid: {worker.pid})")
 

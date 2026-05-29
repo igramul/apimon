@@ -9,6 +9,9 @@ class TicketLedMapper(object):
 
     def __init__(self, led_count: int, name: str = "unnamed") -> None:
         self._led_count: int = led_count
+        # LED at index 0 is reserved exclusively for the status indicator and
+        # is not available for ticket display.
+        self._ticket_led_count: int = max(led_count - 1, 0)
         self.name = name
         self._leds: List[Color] = [Color.black] * self._led_count
         self._overflow: bool = False
@@ -22,13 +25,13 @@ class TicketLedMapper(object):
             color_counts_overdue[item.get('color')] = item.get('overdue')
 
         total_count = sum(color_counts.values())
-        if total_count > self._led_count:
+        if total_count > self._ticket_led_count:
             self._overflow = True
-            # scale color count to led_count
+            # scale color count to ticket_led_count
             for color, count in color_counts.items():
-                color_counts[color] = math.ceil(count * self._led_count / total_count)
-            # reduce the color with the most of the leds by one as long as we have more than led_count
-            while sum(color_counts.values()) > self._led_count:
+                color_counts[color] = math.ceil(count * self._ticket_led_count / total_count)
+            # reduce the color with the most of the leds by one as long as we have more than ticket_led_count
+            while sum(color_counts.values()) > self._ticket_led_count:
                 color_with_max_count = max(color_counts, key=lambda k: color_counts[k])
                 color_counts[color_with_max_count] -= 1
         else:
@@ -44,9 +47,10 @@ class TicketLedMapper(object):
             leds += color_array
 
         if not self._overflow:
-            leds += [Color.black] * (self._led_count - total_count)
+            leds += [Color.black] * (self._ticket_led_count - sum(color_counts.values()))
 
-        self._leds = leds
+        # Reserve LED index 0 for status display - tickets start at index 1.
+        self._leds = [Color.black] + leds
 
     @property
     def leds(self) -> List[Color]:

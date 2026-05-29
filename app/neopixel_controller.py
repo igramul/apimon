@@ -129,8 +129,9 @@ class NeoPixelController(object):
 
         cycle_time = time.time() % self.PULSING_PERIOD + self._cycle_time_offset
         pulsing_brightness = int(math.sin(cycle_time * self.PULSING_PERIOD * math.pi / 2) * 255)
+        # LED index 0 is reserved exclusively for the status indicator.
         color_status = status_color.adjust_brightness(max(pulsing_brightness, 0))
-        new_status_color = (color_status + self._led_array[0]).tuple
+        new_status_color = color_status.tuple
         if self._pixels[0] != new_status_color:
             self._pixels[0] = new_status_color
             needs_update = True

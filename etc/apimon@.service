@@ -1,20 +1,25 @@
 [Unit]
 Description=AINT Jira Betriebs Board Tickets Anzeige
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
+Type=simple
 WorkingDirectory=/home/apimon/Work/apimon
-
 User=root
 Group=root
 
-Restart=always
-
 Environment="CONFIG_FILE=config_%i.json"
-
 ExecStart=/home/apimon/Work/apimon/venv/bin/gunicorn -c /home/apimon/Work/apimon/etc/gunicorn_%i_config.py apimon:app
 
-ExecStop=/bin/kill -SIGINT $MAINPID
+# Sauber beenden: gunicorn fährt bei SIGTERM graceful herunter
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStopSec=10
+SendSIGKILL=yes
+
+Restart=on-failure
+RestartSec=5
 
 Type=simple
 

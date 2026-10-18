@@ -24,6 +24,7 @@ clean:
 PHONY: clean-all
 clean-all:
 	rm -rf venv
+	rm -rf $(INSTALL_DIR)/*
 
 .PHONY: test
 test: $(PYTEST)

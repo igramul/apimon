@@ -9,7 +9,7 @@ worker_class = "sync"
 threads = 1
 
 # Worker timeout and lifecycle
-timeout = 30
+timeout = 120
 graceful_timeout = 5
 keepalive = 5
 

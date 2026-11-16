@@ -10,7 +10,7 @@ threads = 1
 
 # Worker timeout and lifecycle
 timeout = 120
-graceful_timeout = 30
+graceful_timeout = 5
 keepalive = 5
 
 # Worker restart to prevent memory leaks

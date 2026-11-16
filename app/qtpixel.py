@@ -58,11 +58,24 @@ class QtPixel(List[Tuple[int, int, int]]):
         temp_labels = []
         for i in range(self.n):
             led_label = QLabel()
-            led_label.setFixedSize(30, 15)  # Breiter für vertikale Anordnung
-            led_label.setAutoFillBackground(True)
-            # Initial mit schwarz
-            color = Color.black.tuple
-            led_label.setStyleSheet(f"background-color: rgb({color[0]}, {color[1]}, {color[2]}); border: 1px solid black; border-radius: 5px;")
+            if i == 0:
+                # Status-LED (index 0) wird als Kreis dargestellt
+                led_label.setFixedSize(30, 30)
+                led_label.setAutoFillBackground(True)
+                color = Color.black.tuple
+                led_label.setStyleSheet(
+                    f"background-color: rgb({color[0]}, {color[1]}, {color[2]}); "
+                    f"border: 1px solid black; border-radius: 15px;"
+                )
+            else:
+                led_label.setFixedSize(30, 15)  # Breiter für vertikale Anordnung
+                led_label.setAutoFillBackground(True)
+                # Initial mit schwarz
+                color = Color.black.tuple
+                led_label.setStyleSheet(
+                    f"background-color: rgb({color[0]}, {color[1]}, {color[2]}); "
+                    f"border: 1px solid black; border-radius: 5px;"
+                )
             temp_labels.append(led_label)
 
         # Füge Labels in umgekehrter Reihenfolge zum Layout hinzu
@@ -79,9 +92,14 @@ class QtPixel(List[Tuple[int, int, int]]):
         # Fenster zur Liste hinzufügen
         QtPixel._windows.append(self._window)
 
-    def _set_led_color(self, label: QLabel, color: Tuple[int, int, int]):
+    def _set_led_color(self, label: QLabel, color: Tuple[int, int, int], is_status: bool = False):
         """Setzt die Farbe eines LED Labels"""
-        label.setStyleSheet(f"background-color: rgb({color[0]}, {color[1]}, {color[2]}); border: 1px solid black; border-radius: 10px;")
+        # Status-LED (index 0) wird als Kreis dargestellt, alle anderen als Rechteck
+        radius = 15 if is_status else 10
+        label.setStyleSheet(
+            f"background-color: rgb({color[0]}, {color[1]}, {color[2]}); "
+            f"border: 1px solid black; border-radius: {radius}px;"
+        )
 
     def init(self):
         """Initialisiert die LED-Anzeige"""
@@ -99,7 +117,7 @@ class QtPixel(List[Tuple[int, int, int]]):
         # Update alle LED-Farben
         for i, color_tuple in enumerate(self):
             if i < len(self._led_labels):
-                self._set_led_color(self._led_labels[i], color_tuple)
+                self._set_led_color(self._led_labels[i], color_tuple, is_status=(i == 0))
 
         # Qt Event Loop verarbeiten - NUR EINMAL um Rekursion zu vermeiden
         if QtPixel._app:

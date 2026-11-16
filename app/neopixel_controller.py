@@ -119,7 +119,7 @@ class NeoPixelController(object):
         if self._status == STATUS.INIT:
             status_color = Color.black
         elif self._status == STATUS.WORKING:
-            status_color = Color.white
+            status_color = Color.grey(10)
         elif self._status == STATUS.CONNECTION_ERROR:
             status_color = Color.orange
         elif self._status == STATUS.ERROR:
